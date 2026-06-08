@@ -732,7 +732,7 @@ describe('OpenAILegacyChatProvider', () => {
       },
     );
 
-    it.each(['gpt-5.1', 'gpt-5.4-mini', 'gpt-5.4-pro', 'kimi-k2.6', 'some-model'])(
+    it.each(['gpt-5.1', 'gpt-5.4-mini', 'gpt-5.4-pro'])(
       '.withThinking("xhigh") clamps to high for Chat Completions model %s',
       async (model) => {
         const provider = createProvider({ model }).withThinking('xhigh');
@@ -743,6 +743,20 @@ describe('OpenAILegacyChatProvider', () => {
 
         expect(body['reasoning_effort']).toBe('high');
         expect(provider.thinkingEffort).toBe('high');
+      },
+    );
+
+    it.each(['deepseek-v4-flash', 'deepseek/deepseek-v4-pro', 'qwen3-235b-a22b', 'some-model'])(
+      '.withThinking("xhigh") passes through for non-OpenAI model %s',
+      async (model) => {
+        const provider = createProvider({ model }).withThinking('xhigh');
+        const history: Message[] = [
+          { role: 'user', content: [{ type: 'text', text: 'Think' }], toolCalls: [] },
+        ];
+        const body = await captureRequestBody(provider, '', [], history);
+
+        expect(body['reasoning_effort']).toBe('xhigh');
+        expect(provider.thinkingEffort).toBe('xhigh');
       },
     );
 
@@ -766,6 +780,21 @@ describe('OpenAILegacyChatProvider', () => {
 
       expect(supported['reasoning_effort']).toBe('xhigh');
       expect(unsupported['reasoning_effort']).toBe('high');
+    });
+
+    it('.withThinking("max") passes through for non-OpenAI models', async () => {
+      const history: Message[] = [
+        { role: 'user', content: [{ type: 'text', text: 'Think' }], toolCalls: [] },
+      ];
+
+      const body = await captureRequestBody(
+        createProvider({ model: 'deepseek-v4-flash' }).withThinking('max'),
+        '',
+        [],
+        history,
+      );
+
+      expect(body['reasoning_effort']).toBe('xhigh');
     });
   });
 

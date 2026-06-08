@@ -14,6 +14,7 @@ import OpenAI from 'openai';
 
 import {
   getOpenAILegacyModelCapability,
+  isOpenAIModel,
   supportsOpenAIChatCompletionsXHighReasoning,
 } from './capability-registry';
 import {
@@ -141,6 +142,11 @@ function clampChatCompletionsReasoningEffort(
 ): string | undefined {
   if (reasoningEffort !== 'xhigh') {
     return reasoningEffort;
+  }
+  // Only clamp for known OpenAI models — third-party OpenAI-compatible
+  // providers (DeepSeek, Qwen, etc.) may support xhigh/max natively.
+  if (!isOpenAIModel(model)) {
+    return 'xhigh';
   }
   return supportsOpenAIChatCompletionsXHighReasoning(model) ? 'xhigh' : 'high';
 }

@@ -210,6 +210,19 @@ export function supportsOpenAIChatCompletionsXHighReasoning(modelName: string): 
   return OPENAI_CHAT_COMPLETIONS_XHIGH_REASONING_MODELS.has(modelIdLeaf(modelName));
 }
 
+// Prefixes used by OpenAI models (gpt-*, o{digit}).
+// Used to distinguish OpenAI models from third-party OpenAI-compatible
+// providers (DeepSeek, Qwen, etc.) that also use the `openai-legacy` adapter.
+const OPENAI_MODEL_PREFIXES = ['gpt-'] as const;
+
+const OPENAI_REASONING_MODEL_RE = /^o\d/;
+
+export function isOpenAIModel(modelName: string): boolean {
+  const leaf = modelIdLeaf(modelName);
+  return OPENAI_MODEL_PREFIXES.some((prefix) => leaf.startsWith(prefix))
+    || OPENAI_REASONING_MODEL_RE.test(leaf);
+}
+
 export function usesOpenAIResponsesDeveloperRole(modelName: string): boolean {
   const normalized = normalizeModelName(modelName);
   if (OPENAI_RESPONSES_DEVELOPER_ROLE_MODELS.has(normalized)) return true;
